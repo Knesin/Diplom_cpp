@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
 
 	try
 	{
-		ini_parser ini_file("C://repos//Diplom//config.ini");
+		ini_parser ini_file("C:/repos/Diplom/config.ini");
 
 		std::string initialize_connection_db("host=" + ini_file.get_value("DataBase.bd_host") +
 			" port=" + ini_file.get_value("DataBase.bd_port") +
@@ -47,7 +47,6 @@ int main(int argc, char* argv[])
 
 		unsigned short port = static_cast<unsigned short>(std::stoi(ini_file.get_value("Server.server_port")));
 		auto const address = net::ip::make_address("0.0.0.0");
-		//unsigned short port = 8080;
 
 		net::io_context ioc{1};
 
@@ -55,7 +54,7 @@ int main(int argc, char* argv[])
 		tcp::socket socket{ioc};
 		httpServer(acceptor, socket, db);
 
-		std::cout << "Open browser and connect to http://localhost:8080 to see the web server operating" << std::endl;
+		std::cout << "Open browser and connect to http://localhost:" <<  port << " to see the web server operating" << std::endl;
 
 		ioc.run();
 	}

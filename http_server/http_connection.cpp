@@ -106,19 +106,45 @@ void HttpConnection::print_result(const std::vector<std::string>& searchResult)
 		<< "</body>\n"
 		<< "</html>\n";
 }
+void HttpConnection::print_result(const std::multimap<int, std::string, std::greater<int>>& searchResult)
+{
+	int result_size = 10; //максимальное количество выводимых результатов
+	response_.set(http::field::content_type, "text/html");
+	beast::ostream(response_.body())
+		<< "<html>\n"
+		<< "<head><meta charset=\"UTF-8\"><title>Search Engine</title></head>\n"
+		<< "<body>\n"
+		<< "<h1>Search Engine</h1>\n"
+		<< "<p>Response:<p>\n"
+		<< "<table>\n";
+
+	for (const auto& [key, value] : searchResult)
+	{
+		beast::ostream(response_.body())
+			<< "<tr>\n<td><a href = \""
+			<< value << "\">"
+			<< value << "</a></td>\n"
+			<< "<td>" << key << "</td>\n</tr>\n";
+		--result_size;
+		if (result_size == 0) break;
+	}
+
+	beast::ostream(response_.body())
+		<< "</table>\n"
+		<< "</body>\n"
+		<< "</html>\n";
+}
 
 std::vector<std::string> HttpConnection::convert_multimap_to_vector(const std::multimap<int, std::string, std::greater<int>>& multimap)
 {
 	std::vector<std::string> result;
-	int result_size = 10;
-	int i = 0;
+	int result_size = 10; //максимальное количество выводимых результатов
 
 	for (auto [key, value] : multimap)
 	{
-		std::cout << key << " : " << value << std::endl;
 		result.push_back(value);
-		++i;
-		if (i == result_size) break;
+		--result_size;
+		if (result_size == 0) break;
 	}
 	return result;
 }
@@ -253,24 +279,19 @@ void HttpConnection::createResponsePost()
 				{
 					db_result_sort.insert({ value, key });
 				}
-
-
-				print_result(convert_multimap_to_vector(db_result_sort));
-
+				print_result(db_result_sort);
+				//print_result(convert_multimap_to_vector(db_result_sort));
 			}
 			else
 			{
 				//нет результата
 				print_not_found();
 			}
-
 		}
 		else {
 			//вывод что не верный запрос
 			print_bad_request();
 		}
-
-
 	}
 	else
 	{

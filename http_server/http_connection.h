@@ -49,6 +49,7 @@ private:
 	void print_not_found();
 	void print_bad_request();
 	void print_result(const std::vector<std::string>& searchResult);
+	void print_result(const std::multimap<int, std::string, std::greater<int>>& searchResult);
 	std::vector<std::string> convert_multimap_to_vector(const std::multimap<int, std::string, std::greater<int>>& multimap);
 };
 

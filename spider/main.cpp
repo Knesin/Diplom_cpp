@@ -143,8 +143,8 @@ Link make_first_link(const std::string& url)
 
 Link make_link(const std::string& url, const Link& current_link)
 {
-	std::regex ur("(https?)?(:?\/\/)?([[:alnum:]-_]+\..*?)?(\/.*)");
-	// \1 = протокол (http, https или пусто) \2 =не нужно \3 = адрес \4 = страница
+	std::regex ur("(https?)?(:?\/\/)?([[:alnum:]_-]+\.[^\/]+)?(\/.*(#[^\/]+$)?)");
+	// \1 = протокол (http, https или пусто) \2 =не нужно \3 = адрес \4 = страница \5 = ссылка на странице
 	std::smatch sm;
 	std::regex_search(url, sm, ur);
 
@@ -175,11 +175,17 @@ Link make_link(const std::string& url, const Link& current_link)
 	};
 	//заполняем страницу
 	if (sm[4].length() != 0) {
-		tmp_link.query = sm[4].str();
+		if(sm[5].length() == 0)
+		{
+			tmp_link.query = sm[4].str();
+		}
+		else
+		{
+			tmp_link.query = sm[4].str().substr(0, sm[4].length() - sm[5].length()); //страница без ссылки на ней
+		}
 	}
 	else {
-		tmp_link.query = '/';
-	};
+		tmp_link.query = 
 	return tmp_link;
 }
 
@@ -193,10 +199,13 @@ std::vector<Link> get_link(const std::string& html, const Link& current_link)
 
 	for (std::sregex_iterator i = links_begin; i != links_end; ++i) {
 		std::smatch sm = *i;
-		Link tmp_link = make_link(sm[1].str(), current_link);
-		if (std::find(links_result.begin(), links_result.end(), tmp_link) == links_result.end()) // проверка на повторы
+		if (sm[1].str().at(0) != '#')//не обрабатываем якоря на странице (даёт кртный прирост)
 		{
-			links_result.push_back(tmp_link);
+			Link tmp_link = make_link(sm[1].str(), current_link);
+			if (std::find(links_result.begin(), links_result.end(), tmp_link) == links_result.end()) // проверка на повторы
+			{
+				links_result.push_back(tmp_link);
+			}
 		}
 	}
 	return links_result;
@@ -231,9 +240,17 @@ void parseLink(const Link& link, int depth, data_base& db)
 		}
 
 		// TODO: Collect more links from HTML code and add them to the parser like that:
+		auto time_start = std::chrono::high_resolution_clock::now();
+
+		std::vector<Link> links(get_link(html, link));
+
+		auto time_end = std::chrono::high_resolution_clock::now();
+		std::chrono::duration<double> t = (time_end - time_start);
+		std::cout << ("Time: " + link_to_string(link) + " ") << t.count() << std::endl;
+
 
 		if (depth > 0) {
-			std::vector<Link> links(get_link(html, link)); // получаем ссылки если будем их использовать
+			//std::vector<Link> links(get_link(html, link)); // получаем ссылки если будем их использовать
 			std::lock_guard<std::mutex> lock(mtx);
 
 			size_t count = links.size();
@@ -260,7 +277,7 @@ int main()
 {
 	setlocale(LC_ALL, "ru_RU.utf-8");
 	try {
-		ini_parser ini_file("C://repos//Diplom//config.ini");
+		ini_parser ini_file("C:/repos/Diplom/config.ini");
 
 		std::string start_page = ini_file.get_value("Client.start_page");
 		int recursion_depth = std::stoi(ini_file.get_value("Client.recursion_depth"));
