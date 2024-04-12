@@ -185,7 +185,8 @@ Link make_link(const std::string& url, const Link& current_link)
 		}
 	}
 	else {
-		tmp_link.query = 
+		tmp_link.query = '/';
+	}
 	return tmp_link;
 }
 
@@ -240,17 +241,9 @@ void parseLink(const Link& link, int depth, data_base& db)
 		}
 
 		// TODO: Collect more links from HTML code and add them to the parser like that:
-		auto time_start = std::chrono::high_resolution_clock::now();
-
-		std::vector<Link> links(get_link(html, link));
-
-		auto time_end = std::chrono::high_resolution_clock::now();
-		std::chrono::duration<double> t = (time_end - time_start);
-		std::cout << ("Time: " + link_to_string(link) + " ") << t.count() << std::endl;
-
 
 		if (depth > 0) {
-			//std::vector<Link> links(get_link(html, link)); // получаем ссылки если будем их использовать
+			std::vector<Link> links(get_link(html, link)); // получаем ссылки если будем их использовать
 			std::lock_guard<std::mutex> lock(mtx);
 
 			size_t count = links.size();
